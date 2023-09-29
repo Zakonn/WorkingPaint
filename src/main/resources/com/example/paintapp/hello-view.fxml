@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.canvas.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<?import javafx.geometry.Insets?>
+<AnchorPane id="root" onKeyPressed="#handleKeyInput" prefHeight="1080.0" prefWidth="1920.0" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.paintapp.Controller">
+    <children>
+        <BorderPane prefHeight="1080.0" prefWidth="1920.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+            <top>
+                <VBox prefHeight="1080.0" prefWidth="1920.0" BorderPane.alignment="CENTER">
+                    <children>
+                        <MenuBar fx:id="menuBar">
+                            <menus>
+                                <Menu mnemonicParsing="false" text="File">
+                                    <items>
+                                        <MenuItem onAction="#handleOpenAction" text="Open"/>
+                                        <MenuItem onAction="#handleSaveAction" text="Save"/>
+                                        <MenuItem onAction="#handleSaveAsAction" text="SaveAs"/>
+                                    </items>
+                                </Menu>
+                                <Menu mnemonicParsing="false" text="Help">
+                                    <items>
+                                        <MenuItem text="Search"/>
+                                        <MenuItem onAction="#handleAboutAction" text="About"/>
+                                    </items>
+                                </Menu>
+                            </menus>
+                        </MenuBar>
+                        <ToolBar fx:id="toolBar" prefHeight="100.0" prefWidth="1920.0" VBox.vgrow="NEVER">
+                            <VBox.margin>
+                                <Insets />
+                            </VBox.margin>
+                            <ColorPicker> </ColorPicker>
+                            <Button onAction="#handleNewLine" text="Line"> </Button>
+                            <Slider fx:id="lineWidthSlider" max="50" min=".1" value="1"> </Slider>
+                        </ToolBar>
+                    </children>
+                </VBox>
+            </top>
+            <center>
+                <AnchorPane fx:id="centerRoot" BorderPane.alignment="CENTER">
+                    <children>
+                        <TabPane fx:id="tabs" prefHeight="200.0" prefWidth="200.0" tabClosingPolicy="UNAVAILABLE" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
+                    </children>
+                </AnchorPane>
+            </center>
+            <bottom>
+                <Canvas fx:id="canvas">
+                </Canvas>
+            </bottom>
+        </BorderPane>
+    </children>
+</AnchorPane>
