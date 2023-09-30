@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<AnchorPane fx:id="root" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="1080.0" prefWidth="1920.0" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.paintapp.PaintController">
+        <BorderPane prefHeight="1080.0" prefWidth="1920.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+            <top>
+                <VBox prefHeight="120.0" prefWidth="1920.0" BorderPane.alignment="CENTER">
+                        <MenuBar fx:id="menuBar">
+                                <Menu mnemonicParsing="false" text="File">
+                                    <items>
+                                        <MenuItem onAction="#handleOpenAction" text="Open" />
+                                        <MenuItem onAction="#handleSaveAction" text="Save" />
+                                        <MenuItem onAction="#handleSaveAsAction" text="SaveAs" />
+                                    </items>
+                                </Menu>
+                                <Menu mnemonicParsing="false" text="Help">
+                                    <items>
+                                        <MenuItem text="Search" />
+                                        <MenuItem onAction="#handleAboutAction" text="About" />
+                                    </items>
+                                </Menu>
+                        </MenuBar>
+                        <ToolBar fx:id="toolBar" prefHeight="100.0" prefWidth="1920.0" VBox.vgrow="NEVER">
+                            <VBox.margin>
+                                <Insets />
+                            </VBox.margin>
+                            <ColorPicker fx:id="colorPicker" onAction="#pickColor"> </ColorPicker>
+                            <Button onAction="#handlePencil" text="Pencil"> </Button>
+                            <Label text="Line Width"> </Label>
+                            <ComboBox fx:id="lineWidth" editable="true" onAction="#handleLineWidth" maxWidth="100" value="1"> </ComboBox>
+                            <Button onAction="#handleShapes" text="Shapes!!"> </Button>
+                            <ComboBox fx:id="cWidth" editable="true" onAction="#handlecWidth" maxWidth="100" > </ComboBox>
+                            <ComboBox fx:id="cHeight" editable="true" onAction="#handlecHeight" maxWidth="100"> </ComboBox>
+                        </ToolBar>
+                </VBox>
+            </top>
+            <center>
+                <AnchorPane fx:id="centerRoot" BorderPane.alignment="CENTER">
+                        <TabPane fx:id="tabs" prefHeight="200.0" prefWidth="200.0" tabClosingPolicy="UNAVAILABLE" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
+                    </AnchorPane>
+            </center>
+        </BorderPane>
+</AnchorPane>
