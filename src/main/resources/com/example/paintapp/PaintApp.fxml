@@ -4,6 +4,7 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
+<?import java.lang.Integer?>
 <AnchorPane fx:id="root" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="1080.0" prefWidth="1920.0" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.paintapp.PaintController">
         <BorderPane prefHeight="1080.0" prefWidth="1920.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
             <top>
@@ -11,9 +12,17 @@
                         <MenuBar fx:id="menuBar">
                                 <Menu mnemonicParsing="false" text="File">
                                     <items>
+                                        <MenuItem onAction="#handleNewAction" text="New" />
                                         <MenuItem onAction="#handleOpenAction" text="Open" />
                                         <MenuItem onAction="#handleSaveAction" text="Save" />
                                         <MenuItem onAction="#handleSaveAsAction" text="SaveAs" />
+                                    </items>
+                                </Menu>
+                                <Menu mnemonicParsing="false" text="Edit">
+                                    <items>
+                                        <MenuItem onAction="#handleClearAction" text="Clear Tab" />
+                                        <MenuItem onAction="#handleUndoAction" text="Undo" />
+                                        <MenuItem onAction="#handleRedoAction" text="Redo" />
                                     </items>
                                 </Menu>
                                 <Menu mnemonicParsing="false" text="Help">
@@ -27,13 +36,23 @@
                             <VBox.margin>
                                 <Insets />
                             </VBox.margin>
-                            <ColorPicker fx:id="colorPicker" onAction="#pickColor"> </ColorPicker>
-                            <Button onAction="#handlePencil" text="Pencil"> </Button>
+                            <ColorPicker fx:id="colorPicker" onAction="#updateColor"> </ColorPicker>
+                            <Button fx:id="pencilButton" onAction="#handlePencil" text="Pencil"> </Button>
+                            <Button fx:id="eraserButton" onAction="#handleEraser" text="Eraser"> </Button>
+                            <Button fx:id="cutButton" onAction="#handleCut" text="Cut"> </Button>
+                            <Button fx:id="copyButton" onAction="#handleCopy" text="Copy"> </Button>
+                            <Button fx:id="pasteButton" onAction="#handlePaste" text="Paste"> </Button>
+                            <Button fx:id="cropButton" onAction="#handleCrop" text="Crop"> </Button>
                             <Label text="Line Width"> </Label>
-                            <ComboBox fx:id="lineWidth" editable="true" onAction="#handleLineWidth" maxWidth="100" value="1"> </ComboBox>
+                            <ComboBox fx:id="lineWidth" editable="true" onAction="#updateLineWidth" maxWidth="100" value="1">
+                            </ComboBox>
                             <Button onAction="#handleShapes" text="Shapes!!"> </Button>
-                            <ComboBox fx:id="cWidth" editable="true" onAction="#handlecWidth" maxWidth="100" > </ComboBox>
-                            <ComboBox fx:id="cHeight" editable="true" onAction="#handlecHeight" maxWidth="100"> </ComboBox>
+                            <Label text="Canvas Width"> </Label>
+                            <ComboBox fx:id="cWidth" editable="true" onAction="#handlecWidth" maxWidth="100" >
+                            </ComboBox>
+                            <Label text="Canvas Height"> </Label>
+                            <ComboBox fx:id="cHeight" editable="true" onAction="#handlecHeight" maxWidth="100">
+                            </ComboBox>
                         </ToolBar>
                 </VBox>
             </top>

@@ -32,19 +32,35 @@ public class PaintController {
     public MenuBar menuBar;
     public ToolBar toolBar;
     public ColorPicker colorPicker;
-    public static Color currentColor;
-    public static double currentLineWidth;
-    public ComboBox cWidth;
-    public ComboBox cHeight;
+    public Color currentColor;
+    public ComboBox<Integer> cWidth;
+    public ComboBox<Integer> cHeight;
     public ComboBox<Integer> lineWidth =
             new ComboBox<>(FXCollections.observableList(Arrays.asList(1, 2, 4, 8, 10, 12, 14, 18, 24, 30, 36, 48, 60, 72)));
+    public double currentLineWidth;
+
+
+
     // The node that manages all the canvas panel tabs
     @FXML
     protected TabPane tabs;
 
     @FXML
     private AnchorPane root;
-
+    public Button pencilButton;
+    public boolean pencil = false;
+    public Button eraserButton;
+    public boolean eraser = false;
+    public Button snipButton;
+    public boolean snip = false;
+    public Button cutButton;
+    public boolean cut = false;
+    public Button copyButton;
+    public boolean copy = false;
+    public Button cropButton;
+    public boolean crop = false;
+    public Button pasteButton;
+    public boolean paste = false;
 
 
     public static double clamp(double val, double min, double max) {
@@ -166,7 +182,7 @@ public class PaintController {
 
     }
 
-    public void pickColor(ActionEvent actionEvent) {
+    public void updateColor(ActionEvent actionEvent) {
         currentColor = colorPicker.getValue();
     }
 
@@ -194,6 +210,7 @@ public class PaintController {
         } catch (Exception ignored) {
         }
     }
+
     public void drawShapes(GraphicsContext gc) {
         Color color = currentColor;
         double width = Double.parseDouble(this.lineWidth.getEditor().getText());
@@ -220,11 +237,107 @@ public class PaintController {
 
 
     public void handlePencil(ActionEvent actionEvent) {
-
+        if (!pencil) {
+            pencil = true;
+            pencilButton.setTextFill(Color.LIGHTGREEN);
+        }
+        else {
+            pencil = false;
+            pencilButton.setTextFill(Color.BLACK);
+        }
     }
 
-    public void handleLineWidth(ActionEvent actionEvent) {
+    public void handleEraser(ActionEvent actionEvent) {
+        if (!eraser) {
+            eraser = true;
+            eraserButton.setTextFill(Color.LIGHTGREEN);
+        }
+        else {
+            eraser = false;
+            eraserButton.setTextFill(Color.BLACK);
+        }
+    }
+
+    public void handleSnip(ActionEvent actionEvent) {
+        if (!snip) {
+            snip = true;
+            snipButton.setTextFill(Color.LIGHTGREEN);
+        }
+        else {
+            snip = false;
+            snipButton.setTextFill(Color.BLACK);
+        }
+    }
+
+
+    public void updateLineWidth(ActionEvent actionEvent) {
         currentLineWidth = Double.parseDouble(lineWidth.getEditor().getText());
+    }
+
+    public void handleNewAction(ActionEvent actionEvent) {
+        addTab();
+    }
+
+    public void handleClearAction(ActionEvent actionEvent) {
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION, "Are you sure you want to clear your current canvas?", ButtonType.YES, ButtonType.NO);
+        alert.setTitle("Clear Canvas");
+        alert.showAndWait();
+        if (alert.getResult() == ButtonType.YES) {
+            this.getCanvas().clearCanvas();
+        }
+    }
+
+    public void handleUndoAction(ActionEvent actionEvent) {
+        this.getCanvas().undoRedo.Undo(this.getCanvas());
+    }
+
+    public void handleRedoAction(ActionEvent actionEvent) {
+        this.getCanvas().undoRedo.Redo(this.getCanvas());
+    }
+
+
+    public void handleCut(ActionEvent actionEvent) {
+        if (!cut) {
+            cut = true;
+            cutButton.setTextFill(Color.LIGHTGREEN);
+        }
+        else {
+            cut = false;
+            cutButton.setTextFill(Color.BLACK);
+        }
+    }
+
+    public void handleCopy(ActionEvent actionEvent) {
+        if (!copy) {
+            copy = true;
+            copyButton.setTextFill(Color.LIGHTGREEN);
+        }
+        else {
+            copy = false;
+            copyButton.setTextFill(Color.BLACK);
+        }
+    }
+
+    public void handleCrop(ActionEvent actionEvent) {
+        if (!crop) {
+            crop = true;
+            cropButton.setTextFill(Color.LIGHTGREEN);
+        }
+        else {
+            crop = false;
+            cropButton.setTextFill(Color.BLACK);
+        }
+    }
+
+    public void handlePaste(ActionEvent actionEvent) {
+        if (!paste) {
+            paste = true;
+            pasteButton.setTextFill(Color.LIGHTGREEN);
+        }
+        else {
+            paste = false;
+            pasteButton.setTextFill(Color.BLACK);
+        }
     }
 }
 
