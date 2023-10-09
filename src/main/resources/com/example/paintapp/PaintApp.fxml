@@ -3,6 +3,7 @@
 <?import javafx.geometry.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
+<?import javafx.scene.paint.Color?>
 
 <?import java.lang.Integer?>
 <AnchorPane fx:id="root" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="1080.0" prefWidth="1920.0" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.paintapp.PaintController">
@@ -39,6 +40,8 @@
                             <ColorPicker fx:id="colorPicker" onAction="#updateColor"> </ColorPicker>
                             <Button fx:id="pencilButton" onAction="#handlePencil" text="Pencil"> </Button>
                             <Button fx:id="eraserButton" onAction="#handleEraser" text="Eraser"> </Button>
+                            <Button fx:id="rectangleButton" onAction="#handleRect" text="Rectangle"> </Button>
+                            <Button fx:id="snipButton" onAction="#handleSnip" text="Snip"> </Button>
                             <Button fx:id="cutButton" onAction="#handleCut" text="Cut"> </Button>
                             <Button fx:id="copyButton" onAction="#handleCopy" text="Copy"> </Button>
                             <Button fx:id="pasteButton" onAction="#handlePaste" text="Paste"> </Button>
