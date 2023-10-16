@@ -17,7 +17,6 @@ public class PaintApp extends Application
         Scene scene = new Scene(f.load(), 1280, 720);
         stage.setTitle("Paint App");
         stage.setScene(scene);
-        stage.setMaximized(true);
         PaintController controller = f.getController();
         stage.show();
         controller.addTab();

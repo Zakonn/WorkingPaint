@@ -1,0 +1,34 @@
+#Rauj's Pain(t) Version 0.1.2 - 10/7/2023
+
+New features:
+* Undo and Redo - this MUST use at least (more is ok) one "stack" (this is an abstract data structure in Java)
+* provide a blank starting image and a clear canvas (with "are you sure" check) tool
+* draw an additional shape of your choice
+* have an eraser tool
+* be able to draw a regular side polygon with any # of sides
+* select and copy/paste a piece of the image
+* select and move a piece of the image
+
+
+
+
+Expected next version:
+* have at least 3 unit tests. 
+* have a timer that allows for autosave.  (threading not required but probably a good idea)
+The timer's countdown shall be optionally (as in some way to choose on/off) visible to the user.  Bonus/optional: Reset the timer on a user's save.
+* have some JavaDoc commenting. 
+* have the ability to save in an alternative file format than the one that was the original for the image.
+* have a warning image features/data loss can happen 
+
+
+
+Issues With Code: 
+* allow the addition of text from user-typed input to your image.
+* cant easily move snipped objects
+* smart saving issues
+Links: 
+github.com/Zakonn/WorkingPaintApp
+
+Critique of my Code:
+
+I have done a better job of seperating my code with classes. No class reaches 1000 lines of code. I am still lacking much documenting/commenting. I have a few cases where I could clean up by creating new methods but I think I have a decent clean code. 7/10
