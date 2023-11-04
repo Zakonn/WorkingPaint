@@ -11,9 +11,9 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-<junit.version>5.9.2</junit.version>
+    <junit.version>5.9.0</junit.version>
+    <log4j.configurationFile>"src/main/resources/com/example/paintapp/log4j2-dev.xml"</log4j.configurationFile>
   </properties>
-
   <parent>
     <groupId>org.openjfx</groupId>
     <artifactId>javafx</artifactId>
@@ -149,7 +149,6 @@
       <type>jar</type>
     </dependency>
   </dependencies>
-
   <repositories>
     <repository>
       <id>charm-glisten</id>
@@ -179,7 +178,7 @@
         <version>3.0.0-M5</version>
         <configuration>
           <argLine> --add-exports javafx.graphics/com.sun.javafx.application=ALL-UNNAMED </argLine>
-          <argLine> -Dlog4j.configurationFile="src/main/resources/com/example/paintapp/log4j2.xml"</argLine>
+          <argLine> -Dlog4j.configurationFile="src/main/resources/com/example/brickpaint/log4j2.xml"</argLine>
           <properties>
             <property>
               <name>log4j.configurationFile</name>

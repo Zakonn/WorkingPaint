@@ -1,0 +1,32 @@
+#Rauj's Pain(t) Version 0.1.3 - 10/18/2023
+
+New features:
+* The software shall have at least 3 unit tests.
+* The software shall have a timer that allows for autosave.  (threading not required but probably a good idea)
+* The timer's countdown shall be optionally (as in some way to choose on/off) visible to the user.  Bonus/optional: Reset the timer on a user's save.
+* The code shall have some JavaDoc commenting.
+* The software shall have the ability to save in an alternative file format than the one that was the original for the image.
+
+
+
+
+Expected next version:
+* allow you to rotate (90/180/270) an image, as well as mirror [as in, do a horizontal and vertical flip (so, left becomes right / top becomes bottom).]
+* allow the rotate of either a selection (a chunk) or for your whole canvas.  [that is a both of those]
+* have icons for drawing tools; preferred is all buttons, etc.  (you may retain existing text labels if you want or add if you have icons already).
+* notifications (as in in the corner of window, from the OS); for autosave - trigger or on off.
+* have tool tips for your buttons that appear on hover.
+
+
+
+Issues With Code:
+* issues with loading application on MAC
+* works flawlessly on windows
+
+missing features:
+* needs notifications of when save is done
+* smart saving issues
+
+Links:
+github.com/Zakonn/WorkingPaintApp
+

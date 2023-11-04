@@ -46,6 +46,8 @@
                             <Button fx:id="copyButton" onAction="#handleCopy" text="Copy"> </Button>
                             <Button fx:id="pasteButton" onAction="#handlePaste" text="Paste"> </Button>
                             <Button fx:id="cropButton" onAction="#handleCrop" text="Crop"> </Button>
+                            <Button fx:id="mirrorButton" onAction="#handleMirror" text="Mirror"> </Button>
+                            <Button fx:id="rotateButton" onAction="#handleRotate" text="Rotate"> </Button>
                             <Label text="Line Width"> </Label>
                             <ComboBox fx:id="lineWidth" editable="true" onAction="#updateLineWidth" maxWidth="100" value="1">
                             </ComboBox>
@@ -56,6 +58,10 @@
                             <Label text="Canvas Height"> </Label>
                             <ComboBox fx:id="cHeight" editable="true" onAction="#handlecHeight" maxWidth="100">
                             </ComboBox>
+                            <Separator orientation="VERTICAL"> </Separator>
+                            <Label fx:id="timerLabel" > </Label>
+                            <Button fx:id="autoSaveButton" onAction="#handleAutoSaveButton"  text="ON/OFF"> </Button>
+
                         </ToolBar>
                 </VBox>
             </top>

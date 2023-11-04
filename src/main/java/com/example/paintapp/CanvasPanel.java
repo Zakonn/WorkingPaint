@@ -1,5 +1,6 @@
 package com.example.paintapp;
 
+import javafx.embed.swing.SwingFXUtils;
 import javafx.geometry.Point2D;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.Cursor;
@@ -21,10 +22,21 @@ import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 
+import java.awt.geom.AffineTransform;
+import java.awt.image.AffineTransformOp;
+import java.awt.image.BufferedImage;
+
+/**
+ * Class that handles creation and configuration of all canvas nodes
+ *
+ * @author rmur
+ */
+
 
 public class CanvasPanel {
-
-    // Panel name
+    /**
+     *Panel name
+     */
     public final String Name;
     // Instance of controller class
     private final PaintController controller;
@@ -36,25 +48,41 @@ public class CanvasPanel {
     public StackPane root = new StackPane();
     public Canvas canvas = new Canvas();
     public ScrollPane scrollPane;
-    //
-    // A ghost canvas that will reveal what changes will show what will be drawn before they are on the real canvas.
-    //
+    /**
+    * A ghost canvas that will reveal what changes will show what will be drawn before they are on the real canvas.
+    */
     public Canvas ghostCanvas = new Canvas();
     private final GraphicsContext ghostGC = ghostCanvas.getGraphicsContext2D();
     private GraphicsContext gc = canvas.getGraphicsContext2D();
-    //
-    // Top pane of actual canvas
+    /**
+     * Top pane of the canvas nodes.
+     */
     public AnchorPane pane = new AnchorPane();
     private Group ScrollContent;
 
     public UndoRedo undoRedo;
 
+    /**
+     * firstTouch point of first mouse click
+     * mouseFollow point that follows current mouse position
+     */
+
     private Point2D firstTouch;
     private Point2D mouseFollow;
+    /**
+     * Image that holds the selected portion of image for crop, copy, paste... ext.
+     * each double serves as the corners of selected image
+     */
     private Image s;
     private double s1, s2, s3, s4;
 
 
+    /**
+     * Default Constructor
+     * @param tabPane           The parent of the class
+     * @param name              The name of the canvas panel
+     * @param controllerIn      The current controller for this canvas.
+     */
     public CanvasPanel(TabPane tabPane, String name, PaintController controllerIn) {
         parent = tabPane;
         controller = controllerIn;
@@ -62,10 +90,17 @@ public class CanvasPanel {
         Create(name);
     }
 
+    /**
+     * clears canvas
+     */
     public void clearCanvas() {
         gc.clearRect(0, 0, canvas.getWidth(), canvas.getHeight());
     }
 
+    /**
+     * Creates a new panel
+     * @param name Name of the CanvasPanel
+     */
     public void Create(String name) {
         ghostCanvas.setHeight(CHEIGHT);
         ghostCanvas.setWidth(CWIDTH);
@@ -116,7 +151,7 @@ public class CanvasPanel {
         scrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
 
         UpdateSize();
-        //pane.setOnScroll(this::onScroll);
+
         pane.setOnMouseDragged(this::onMouseDragged);
         pane.setOnMousePressed(this::onMousePressed);
         pane.setOnMouseReleased(this::onMouseReleased);
@@ -139,6 +174,10 @@ public class CanvasPanel {
         insideCanvas = false;
     }
 
+    /**
+     * Handles tools that require a mouse press.
+     * @param event
+     */
     private void onMousePressed(MouseEvent event) {
         firstTouch = new Point2D(event.getX(), event.getY());
         if (event.getButton() == MouseButton.PRIMARY) {
@@ -162,6 +201,11 @@ public class CanvasPanel {
             }
         }
     }
+
+    /**
+     * Handles tools that require a function when mouse is released.
+     * @param event
+     */
     private void onMouseReleased(MouseEvent event) {
         if (event.getButton() == MouseButton.PRIMARY) {
             if (controller.snip) {
@@ -181,6 +225,11 @@ public class CanvasPanel {
             }
         }
     }
+
+    /**
+     * Handles tools that require a function when mouse is dragged across the canvas.
+     * @param event
+     */
     private void onMouseDragged(MouseEvent event) {
             if (controller.pencil) {
                 gc.setStroke(controller.currentColor);
@@ -201,11 +250,19 @@ public class CanvasPanel {
                 DrawShapes.DrawRectanlge(firstTouch.getX(), firstTouch.getY(), event.getX(), event.getY(), ghostGC);
             }
     }
+
+    /**
+     * Updates the mouse position to mouseFollow
+     * @param event
+     */
     private void onMouseMove(MouseEvent event) {
         mouseFollow = new Point2D(event.getX(), event.getY());
     }
 
-
+    /**
+     * Sets the width of every node that builds the canvas
+     * @param x
+     */
 
     public void setSizeX(double x) {
         canvas.setWidth(x);
@@ -214,6 +271,10 @@ public class CanvasPanel {
         root.setPrefWidth(x);
     }
 
+    /**
+     * Sets the height of every node that builds the canvas
+     * @param y
+     */
     public void setSizeY(double y) {
         canvas.setHeight(y);
         ghostCanvas.setHeight(y);
@@ -221,11 +282,17 @@ public class CanvasPanel {
         pane.setPrefHeight(y);
     }
 
+    /**
+     * @return      name of canvas
+     */
+
     public String getName() {
         return Name;
     }
 
-
+    /**
+     * handles copy function after something is snipped(selected)
+     */
     public void sCopy() {
         if (controller.copy) {
             ghostGC.clearRect(0, 0, ghostCanvas.getWidth(), ghostCanvas.getHeight());
@@ -235,6 +302,10 @@ public class CanvasPanel {
             clipboard.setContent(content);
         }
     }
+
+    /**
+     * handles cut function after something is snipped(selected)
+     */
     public void sCut() {
         ghostGC.clearRect(0, 0, ghostCanvas.getWidth(), ghostCanvas.getHeight());
         undoRedo.trackHistory(this);
@@ -256,6 +327,9 @@ public class CanvasPanel {
         content.putImage(s);
         clipboard.setContent(content);
     }
+    /**
+     * handles paste function after something is snipped(selected)
+     */
     public void sPaste() {
         if (s != null) {
             ghostGC.clearRect(0, 0, ghostCanvas.getWidth(), ghostCanvas.getHeight());
@@ -265,6 +339,9 @@ public class CanvasPanel {
             else this.canvas.getGraphicsContext2D().drawImage(s, point.getX(), point.getY());
         }
     }
+    /**
+     * handles crop function after something is snipped(selected)
+     */
     public void sCrop() {
         if (controller.crop) {
             if (s != null) {
@@ -282,10 +359,105 @@ public class CanvasPanel {
             }
         }
     }
+    public void sMirror() {
+        if (s!=null) {
+            undoRedo.trackHistory(this);
+            BufferedImage img = SwingFXUtils.fromFXImage(s,null);
+            AffineTransform tx = new AffineTransform();
+            AffineTransform tx2 = new AffineTransform();
+
+            tx = AffineTransform.getScaleInstance(-1,1);
+            tx2 = AffineTransform.getScaleInstance(1,-1);
+
+            tx.translate(-img.getWidth(null),0);
+            tx2.translate(0,-img.getHeight(null));
+
+
+            AffineTransformOp op = new AffineTransformOp(tx, AffineTransformOp.TYPE_NEAREST_NEIGHBOR);
+            AffineTransformOp op2 = new AffineTransformOp(tx2, AffineTransformOp.TYPE_NEAREST_NEIGHBOR);
+            img = op.filter(img,null);
+            img = op2.filter(img,null);
+
+            ghostGC.clearRect(0,0, ghostCanvas.getWidth(), ghostCanvas.getHeight());
+
+            double x1 = s1;
+            double y1 = s2;
+            double x2 = s3;
+            double y2 = s4;
+            double w = Math.abs(x2-x1);
+            double h = Math.abs(y2-y1);
+            {
+                if (x2 >= x1 && y2 >= y1) {
+                    gc.clearRect(x1, y1, w, h);
+                } else if (x2 >= x1) {
+                    gc.clearRect(x1, y2, w, h);
+                } else gc.clearRect(x2, Math.min(y2, y1), w, h);
+            }
+            Point2D point = DrawShapes.getCorner(s1,s2,s3,s4);
+            this.canvas.getGraphicsContext2D().drawImage(SwingFXUtils.toFXImage(img,null),
+                    point.getX(), point.getY());
+        }
+    }
+    public void sRotate() {
+        if (s!=null) {
+            undoRedo.trackHistory(this);
+            BufferedImage img = SwingFXUtils.fromFXImage(s,null);
+            AffineTransformOp op;
+
+            AffineTransform transform = new AffineTransform();
+            transform.rotate(Math.PI / 2, img.getWidth() / 2d, img.getHeight() / 2d);
+            double offset = (img.getWidth() - img.getHeight()) / 2d;
+            transform.translate(offset, offset);
+
+            op = new AffineTransformOp(transform, AffineTransformOp.TYPE_BILINEAR);
+
+            img = op.filter(img,null);
+
+            ghostGC.clearRect(0,0, ghostCanvas.getWidth(), ghostCanvas.getHeight());
+            double x1 = s1;
+            double y1 = s2;
+            double x2 = s3;
+            double y2 = s4;
+            double w = Math.abs(x2-x1);
+            double h = Math.abs(y2-y1);
+            {
+                if (x2 >= x1 && y2 >= y1) {
+                    gc.clearRect(x1, y1, w, h);
+                } else
+                if (x2 >= x1) {
+                    gc.clearRect(x1, y2, w, h);
+                } else gc.clearRect(x2, Math.min(y2, y1), w, h);
+            }
+            Point2D point = DrawShapes.getCorner(s1,s2,s3,s4);
+            double x = img.getWidth();
+            double y = img.getHeight();
+            if (x > this.canvas.getWidth()) this.setSizeX(x);
+            if (y > this.canvas.getHeight()) this.setSizeY(y);
+            this.UpdateSize();
+            this.canvas.getGraphicsContext2D().drawImage(SwingFXUtils.toFXImage(img, null),
+                    PaintController.clamp(point.getX() - x / 2, 0, this.canvas.getWidth()),
+                    PaintController.clamp(point.getY() - y / 2, 0, this.canvas.getHeight()));
+            s = SwingFXUtils.toFXImage(img,null);
+        }
+    }
+    /**
+     * Updates the size of the canvas based off what is typed by the user.
+     */
     public void UpdateSize() {
         controller.cHeight.getEditor().setText(String.valueOf(canvas.getHeight()));
         controller.cWidth.getEditor().setText(String.valueOf(canvas.getWidth()));
     }
+
+    /**
+     * Creates an image out of a snipped(selected) area
+     *
+     * @param x1        x position of mouse click
+     * @param y1        y position of mouse click
+     * @param x2        x position of mouse release
+     * @param y2        y position of mouse release
+     * @param node      Node to fetch image from
+     * @return          subimage
+     */
     private Image getSubImage(double x1, double y1, double x2, double y2, Node node) {
         int w = (int) Math.abs(x1 - x2);
         int h = (int) Math.abs(y1 - y2);
