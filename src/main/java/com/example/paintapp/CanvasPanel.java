@@ -181,8 +181,11 @@ public class CanvasPanel {
     private void onMousePressed(MouseEvent event) {
         firstTouch = new Point2D(event.getX(), event.getY());
         if (event.getButton() == MouseButton.PRIMARY) {
+            gc.setStroke(controller.currentColor);
+            ghostGC.setStroke(Color.LIGHTBLUE);
             switch (controller.getToggle()) {
                 case Pencil, Eraser -> {
+
                     undoRedo.trackHistory(this);
                     gc.beginPath();
                     gc.moveTo(event.getX(), event.getY());
@@ -203,6 +206,8 @@ public class CanvasPanel {
      */
     private void onMouseReleased(MouseEvent event) {
         if (event.getButton() == MouseButton.PRIMARY) {
+            gc.setStroke(controller.currentColor);
+            ghostGC.setStroke(Color.LIGHTBLUE);
             switch (controller.getToggle()) {
                 case Line -> {
                     gc.strokeLine(firstTouch.getX(), firstTouch.getY(), event.getX(), event.getY());
@@ -254,13 +259,14 @@ public class CanvasPanel {
      */
     private void onMouseDragged(MouseEvent event) {
         if (event.getButton() == MouseButton.PRIMARY) {
-
-            //System.out.println(controller.getToolType());
+            gc.setStroke(controller.currentColor);
+            ghostGC.setStroke(Color.LIGHTBLUE);
             switch (controller.getToggle()) {
                 case Pointer -> {
 
                 }
                 case Pencil -> {
+
                     gc.lineTo(event.getX(), event.getY());
                     gc.stroke();
                 }
