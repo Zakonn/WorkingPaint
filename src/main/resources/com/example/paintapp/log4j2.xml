@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="INFO" name="PaintApp" packages="com.example.paintapp">
+    <Appenders>
+        <Console name="ConsoleAppender" target="SYSTEM_OUT">
+            <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss} %-5level- %msg%n" />
+        </Console>
+        <RollingFile name="RollingFile" fileName="${sys:user.home}/Documents/PaintApp/logs/${date:yyyy-MM}/PaintApp-${date:MM_dd}.log" immediateFlush="true" append="false"
+                     filePattern="${sys:user.home}/Documents/PaintApp/logs/$${date:yyyy-MM}/PaintApp-%d{MM_dd}-(%i).log" bufferedIO="true" createOnDemand="true">
+            <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss} %-5level- %msg%n"/>
+            <Policies>
+                <OnStartupTriggeringPolicy minSize="1"/>
+                <SizeBasedTriggeringPolicy size="5 MB"/>
+            </Policies>
+            <DefaultRolloverStrategy max="2"/>
+        </RollingFile>
+    </Appenders>
+    <Loggers>
+        <Root level="ALL">
+            <AppenderRef ref="ConsoleAppender" />
+            <AppenderRef ref="RollingFile"/>
+        </Root>
+    </Loggers>
+</Configuration>

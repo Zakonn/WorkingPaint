@@ -3,17 +3,29 @@ package com.example.paintapp;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
-import javafx.scene.paint.Color;
 import javafx.stage.Stage;
+import javafx.stage.WindowEvent;
 
-import javax.print.DocFlavor;
 import java.io.File;
 import java.net.URL;
 
+
+/**
+ * Main AppClass
+ */
 public class PaintApp extends Application
 {
-    public final static String imageFolder="/Users/rmur/CS250/PaintApp/src/main/java/com/example/paintapp/images/image.png";
-    //public final static String imageFolder="C:\\Users\\jrmur\\IdeaProjects\\WorkingPaint\\src\\main\\java\\com\\example\\paintapp\\images";
+    /**
+     * Creates the save-path for any saves done in the App
+     */
+    public static final String savePath = System.getProperty("user.home") + "\\Documents\\PaintApp\\Saved Images";
+
+    /**
+     * Starts javafx program
+     *
+     * @param stage Primary stage
+     * @throws Exception App startup Exception
+     */
     @Override
     public void start(Stage stage) throws Exception
     {
@@ -22,14 +34,19 @@ public class PaintApp extends Application
         stage.setTitle("Paint App");
         stage.setScene(scene);
         PaintController controller = f.getController();
+        stage.getScene().getWindow().addEventFilter(WindowEvent.WINDOW_CLOSE_REQUEST, controller::OnClose);
+        stage.setMaximized(true);
         stage.show();
-        controller.addTab();
-        //controller.addIcons();
-        controller.colorPicker.setValue(Color.BLACK);
         URL mySource = PaintApp.class.getProtectionDomain().getCodeSource().getLocation();
         File rootFolder = new File(mySource.getPath());
         System.setProperty("app.root", rootFolder.getAbsolutePath());
-
+        controller.Start();
     }
+
+    /**
+     * Launches Application
+     *
+     * @param args Command line args
+     */
     public static void main(String[] args) {launch();}
 }

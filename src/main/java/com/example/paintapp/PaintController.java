@@ -1,53 +1,53 @@
 package com.example.paintapp;
 
-import javafx.animation.KeyFrame;
-import javafx.animation.Timeline;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
+import javafx.embed.swing.SwingFXUtils;
 import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.Scene;
 import javafx.scene.SnapshotParameters;
 import javafx.scene.canvas.Canvas;
+import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.*;
-import javafx.scene.effect.DropShadow;
 import javafx.scene.image.Image;
-import javafx.scene.input.*;
+import javafx.scene.image.WritableImage;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.ArcType;
 import javafx.stage.FileChooser;
-import javafx.embed.swing.SwingFXUtils;
-import javafx.scene.canvas.GraphicsContext;
-import javafx.scene.image.WritableImage;
+import javafx.stage.WindowEvent;
 import javafx.util.Duration;
-import org.controlsfx.control.Notifications;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.image.ImageView;
-
-
-import java.io.File;
-import java.io.IOException;
-import java.util.*;
-
+import org.controlsfx.control.Notifications;
+import org.controlsfx.control.ToggleSwitch;
 
 import javax.imageio.ImageIO;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.*;
 
 /**
  * Controller that manages FXML objects/functions
  */
 public class PaintController {
     /**
+     * A dictionary of the files used to save the canvasPanel, created after the first SaveAs is called
+     */
+    private final HashMap<Integer, File> ImageFile = new HashMap<>();
+    /**
      * Array of canvas panels
      */
     public List<CanvasPanel> canvasPanels = new ArrayList<>();
-    public MenuBar menuBar;
-    public ToolBar toolBar;
+    public ComboBox<Integer> polySides;
+    /**
+     * The instance of the KeyBinds class that manages KeyBinds for this controller
+     */
+    private KeyBinds keyBinds;
     /**
      * Creates static logging tool to log all thread information
      */
@@ -57,12 +57,11 @@ public class PaintController {
     public static final Logger loggingTool = LogManager.getLogger(PaintController.class);
 
     /**
-     * ComboBoxes that handle/display user input
+     * ComboBoxes that handle/display user input for Canvas size and line size
      */
     public ComboBox<Integer> cWidth;
     public ComboBox<Integer> cHeight;
-    public ComboBox<Integer> lineWidth =
-            new ComboBox<>(FXCollections.observableList(Arrays.asList(1, 2, 4, 8, 10, 12, 14, 18, 24, 30, 36, 48, 60, 72)));
+    public ComboBox<Integer> lineWidth;
     public double currentLineWidth = 1.0;
     /**
      * ColorPicker menuItem
@@ -70,7 +69,7 @@ public class PaintController {
      */
     public ColorPicker colorPicker;
     public Color currentColor;
-
+    public ToggleSwitch autoSaveSwitch;
 
 
     @FXML
@@ -83,59 +82,173 @@ public class PaintController {
      * All buttons from FXML
      * Boolean to handle if they are clicked
      */
-    public Button pencilButton;
-    public boolean pencil = false;
-    public Button eraserButton;
-    public boolean eraser = false;
-    public Button rectangleButton;
-    public boolean rectangle = false;
-    public Button snipButton;
-    public boolean snip = false;
+    public ToggleButton pencilButton;
+    public ToggleButton eraserButton;
+    public ToggleButton rectangleButton;
+    public ToggleButton snipButton;
     public Button cutButton;
     public Button copyButton;
-    public boolean copy = false;
     public Button cropButton;
-    public boolean crop = false;
     public Button pasteButton;
     public Button mirrorButton;
     public Button rotateButton;
-    public Button autoSaveButton;
-    public boolean auto = false;
-
-    /*
-    private final Image ipaste = new Image(Objects.requireNonNull(PaintApp.class.getResourceAsStream("Icons/paste.png")));
-    private final Image ipencil = new Image(Objects.requireNonNull(PaintApp.class.getResourceAsStream("Icons/pencil.png")));
-    private final Image icopy = new Image(Objects.requireNonNull(PaintApp.class.getResourceAsStream("Icons/copy.png")));
-    private final Image irotate = new Image(Objects.requireNonNull(PaintApp.class.getResourceAsStream("Icons/rotate.png")));
-    private final Image ieraser = new Image(Objects.requireNonNull(PaintApp.class.getResourceAsStream("Icons/eraser.png")));
-    private final Image icrop = new Image(Objects.requireNonNull(PaintApp.class.getResourceAsStream("Icons/crop.png")));
-    private final Image isnip = new Image(Objects.requireNonNull(PaintApp.class.getResourceAsStream("Icons/snip.png")));
-    private final Image irect = new Image(Objects.requireNonNull(PaintApp.class.getResourceAsStream("Icons/rectangle.png")));
-    */
+    public ToggleButton squareButton;
+    public ToggleButton ovalButton;
+    public ToggleButton polyButton;
+    public ToggleButton pointerButton;
+    public ToggleButton lineButton;
 
     /**
      * Timer for autoSaving
      */
-    private static final Integer STARTTIME = 15;
-    private Timeline timeline;
-    private Integer timeSeconds = STARTTIME;
     public Label timerLabel;
+    private TimerTask saveManager;
+    private Timer timer;
+    public List<ToggleButton> toggles;
 
-/*
-    public void addIcons() {
-        pencilButton.setGraphic(new ImageView(ipencil));
-        pasteButton.setGraphic(new ImageView(ipaste));
-        copyButton.setGraphic(new ImageView(icopy));
-        rotateButton.setGraphic(new ImageView(irotate));
-        eraserButton.setGraphic(new ImageView(ieraser));
-        cropButton.setGraphic(new ImageView(icrop));
-        snipButton.setGraphic(new ImageView(isnip));
-        rectangleButton.setGraphic(new ImageView(irect));
 
+    /**
+     * Called when program starts.
+     *
+     * Starts threading
+     * Sets root scene
+     * Adds tabs
+     * Starts AutoSave
+     */
+    protected void Start() {
+        loggingTool.info("[APP] Started Program Controller!");
+        Scene scene = root.getScene();
+        keyBinds = new KeyBinds(scene, this);
+        keyBinds.SetKeyBinds();
+        addTab();
+        startAutoSave();
+        addTips();
+        colorPicker.setValue(Color.BLACK);
+        System.out.println("Hello this works");
+        try {
+            Path path = Path.of(PaintApp.savePath);
+            if (!Files.exists(path)) {
+                boolean test = new File(PaintApp.savePath).mkdirs();
+            }
+        } catch (Exception e) {
+            loggingTool.error("[APP] Failed to make application directories!");
+            e.printStackTrace();
+        }
     }
 
- */
+    /**
+     * Asks user to save before closing
+     *
+     * @param event When application is closed
+     */
+    protected void OnClose(WindowEvent event) {
+        boolean needSave = ImageFile.size() != tabs.getTabs().size();
+        if (needSave) {
+            Alert alert = new Alert(Alert.AlertType.INFORMATION);
+            ButtonType save = new ButtonType("SAVE & QUIT");
+            alert.getButtonTypes().remove(ButtonType.OK);
+            alert.getButtonTypes().add(ButtonType.CANCEL);
+            alert.getButtonTypes().add(ButtonType.YES);
+            alert.getButtonTypes().add(save);
+            alert.setHeaderText("You haven't saved in a while...");
+            alert.setTitle("Quit application");
+            alert.setContentText("Close without saving?");
+            alert.initOwner(root.getScene().getWindow());
+            Optional<ButtonType> res = alert.showAndWait();
+            if (res.isPresent()) {
+                if (res.get().equals(ButtonType.CANCEL))
+                    event.consume();
+                if (res.get().equals(ButtonType.YES)) {
+                    Platform.exit();
+                    System.exit(0);
+                }
+                if (res.get().equals(save)) {
+                    saveAll();
+                    Platform.exit();
+                    System.exit(0);
+                }
+            }
+        }
+        else {
+            Platform.exit();
+            System.exit(0);
+        }
+    }
 
+
+    /**
+     * Adds tips for each button
+     * Also places tools in an arrayList
+     */
+    public void addTips() {
+        pointerButton.setTooltip(new Tooltip("Pointer"));
+        pencilButton.setTooltip(new Tooltip("Pencil"));
+        eraserButton.setTooltip(new Tooltip("Eraser"));
+        lineButton.setTooltip(new Tooltip("Line"));
+        rectangleButton.setTooltip(new Tooltip("Draw Rectangle"));
+        snipButton.setTooltip(new Tooltip("Snip a selection"));
+        squareButton.setTooltip(new Tooltip("Square"));
+        ovalButton.setTooltip(new Tooltip("Oval"));
+        polyButton.setTooltip(new Tooltip("Poly"));
+        cutButton.setTooltip(new Tooltip("Cut"));
+        copyButton.setTooltip(new Tooltip("Copy"));
+        cropButton.setTooltip(new Tooltip("Crop"));
+        pasteButton.setTooltip(new Tooltip("Paste"));
+        mirrorButton.setTooltip(new Tooltip("Mirror"));
+        rotateButton.setTooltip(new Tooltip("Rotate"));
+        autoSaveSwitch.setTooltip(new Tooltip("Switch auto-save ON or OFF"));
+
+        toggles = new ArrayList<>() {{
+            add(pointerButton);
+            add(pencilButton);
+            add(eraserButton);
+            add(lineButton);
+            add(rectangleButton);
+            add(snipButton);
+            add(squareButton);
+            add(ovalButton);
+            add(polyButton);
+        }};
+    }
+
+    /**
+     * @param pos index of tool selected
+     * @return enum of selected type tool
+     */
+    private tools convTool(Integer pos) {
+        switch (pos + 1) {
+            case 1 -> {
+                return tools.Pointer;
+            }
+            case 2 -> {
+                return tools.Pencil;
+            }
+            case 3 -> {
+                return tools.Eraser;
+            }
+            case 4 -> {
+                return tools.Line;
+            }
+            case 5 -> {
+                return tools.Rectangle;
+            }
+            case 6 -> {
+                return tools.Snip;
+            }
+            case 7 -> {
+                return tools.Square;
+            }
+            case 8 -> {
+                return tools.Oval;
+            }
+            case 9-> {
+                return tools.Polygon;
+            }
+            default -> {
+                return tools.Nothing;
+            }
+        }
+    }
     /**
      * Adds a tab with a fresh canvas
      * Must be called during initialization
@@ -164,11 +277,32 @@ public class PaintController {
     }
 
     /**
+     * @return selected toggled tool
+     */
+    public tools getToggle() {
+        for (int i = 0; i <= toggles.size() - 1; i++) {
+            if (toggles.get(i).isSelected()) {
+                return convTool(i);
+            }
+        }
+        return tools.Nothing;
+    }
+
+
+    /**
      * Function to handle when About is clicked in MenuBar
       */
     @FXML
     private void handleAboutAction(final ActionEvent event) {
         provideAboutFunctionality();
+    }
+
+    /**
+     * Function to close app when clicked in the MenuBar
+     */
+    @FXML
+    protected void handleButtonClose() {
+        root.getScene().getWindow().fireEvent(new WindowEvent(root.getScene().getWindow(), WindowEvent.WINDOW_CLOSE_REQUEST));
     }
 
     /**
@@ -221,13 +355,18 @@ public class PaintController {
     /**
      * Saves image to default imageFolder
      */
-    public void Save() throws IOException {
-        File file = new File(PaintApp.imageFolder);
+    public void Save(String name) {
+        String fullName = PaintApp.savePath + "\\" + name + ".png";
+        File file = new File(fullName);
         CanvasPanel canvas = this.getCanvas();
         Image img = getRegion(canvas.canvas, canvas.canvas.getWidth(), 0, canvas.canvas.getHeight(), 0);
 
-
-        ImageIO.write(SwingFXUtils.fromFXImage(img, null), "png", file);
+        try {
+            ImageIO.write(SwingFXUtils.fromFXImage(img, null), "png", file);
+        } catch (IOException e) {
+            loggingTool.error("[APP] Encountered IOException when trying to save {} as a file", name);
+            throw new RuntimeException(e);
+        }
         Notifications.create()
                 .title("Save Image")
                 .text("Successfully Saved!")
@@ -238,10 +377,26 @@ public class PaintController {
     }
 
     /**
+     * Saves all panels open as seperate images
+     */
+    protected void saveAll() {
+        for (int i = 0; i <= tabs.getTabs().size() - 1; i++) {
+            if (ImageFile.containsKey(i))
+                Save(canvasPanels.get(i).Name);
+            else {
+                String fullName = PaintApp.savePath + "\\" + canvasPanels.get(i).Name + ".png";
+                ImageFile.putIfAbsent(i, new File(fullName));
+                Save(canvasPanels.get(i).Name);
+            }
+        }
+    }
+
+    /**
      * Sets Save to save button
      */
-    public void handleSaveAction() throws IOException {
-        Save();
+    @FXML
+    public void handleSaveAction(ActionEvent event) throws IOException {
+        Save(getCanvas().Name);
     }
 
     /**
@@ -252,7 +407,7 @@ public class PaintController {
         FileChooser fc = new FileChooser();
         CanvasPanel canvas = this.getCanvas();
         fc.setTitle("Save As");
-        fc.setInitialDirectory(new File(System.getProperty("user.home") + "\\Documents\\PaintApp\\Saved Images"));
+        fc.setInitialDirectory(new File(PaintApp.savePath));
         fc.getExtensionFilters().clear();
         fc.getExtensionFilters().addAll(
                 new FileChooser.ExtensionFilter("PNG", "*.png"),
@@ -276,14 +431,21 @@ public class PaintController {
     }
 
     /**
-     * Handles userKeyInput to save
+     * Function that begins Autosave thread
      */
-    @FXML
-    private void handleKeyInput(final InputEvent event) throws IOException {
-        if (event instanceof KeyEvent save) {
-            if (save.isControlDown() && save.getCode() == KeyCode.S) {
-                handleSaveAction();
-            }
+    public void startAutoSave() {
+        try {
+            if (timer == null) timer = new Timer();
+            if (saveManager == null) saveManager = new AutoSave(300, this);
+            timer.scheduleAtFixedRate(saveManager, 0, 1000);
+            loggingTool.info("[APP] Started AutoSave Thread");
+        } catch (Exception e) {
+            timer.cancel();
+            timer.purge();
+            timer = new Timer();
+            saveManager = new AutoSave(300, this);
+            timer.scheduleAtFixedRate(saveManager, 0, 1000);
+            loggingTool.info("[APP] Restarted AutoSave Thread");
         }
     }
 
@@ -291,10 +453,6 @@ public class PaintController {
      * Perform functionality associated with "About" menu selection
      */
     private void provideAboutFunctionality() {
-
-    }
-
-    public void setKeys(Scene scene) {
 
     }
 
@@ -306,13 +464,6 @@ public class PaintController {
     }
 
     /**
-     * Draws shapes when shape button is pressed
-     */
-    public void handleShapes(ActionEvent actionEvent) {
-        drawShapes(getCanvas().canvas.getGraphicsContext2D());
-    }
-
-    /**
      * Handles width change when user changes width of canvas
      */
     public void handlecWidth(ActionEvent inputMethodEvent) {
@@ -320,8 +471,9 @@ public class PaintController {
             String value = cWidth.getEditor().getText();
             double numb = Double.parseDouble(value);
             numb = clamp(numb, 0d, 2000d);
-            this.getCanvas().setSizeY(numb);
+            this.getCanvas().setSizeX(numb);
         } catch (Exception ignored) {
+            loggingTool.error("[APP] Canvas Width input was Invalid");
         }
     }
     /**
@@ -334,35 +486,8 @@ public class PaintController {
             numb = clamp(numb, 0d, 2000d);
             this.getCanvas().setSizeY(numb);
         } catch (Exception ignored) {
+            loggingTool.error("[APP] Canvas Height input was Invalid!");
         }
-    }
-
-    /**
-     * Function that draws a set of shapes
-     * @param gc    current graphics context
-     */
-    public void drawShapes(GraphicsContext gc) {
-        Color color = currentColor;
-        double width = Double.parseDouble(this.lineWidth.getEditor().getText());
-        gc.setLineWidth(width);
-        gc.setStroke(color);
-        gc.strokeLine(40, 10, 10, 40);
-        gc.fillOval(10, 60, 30, 30);
-        gc.strokeOval(60, 60, 30, 30);
-        gc.fillRoundRect(110, 60, 30, 30, 10, 10);
-        gc.strokeRoundRect(160, 60, 30, 30, 10, 10);
-        gc.fillArc(10, 110, 30, 30, 45, 240, ArcType.OPEN);
-        gc.fillArc(60, 110, 30, 30, 45, 240, ArcType.CHORD);
-        gc.fillArc(110, 110, 30, 30, 45, 240, ArcType.ROUND);
-        gc.strokeArc(10, 160, 30, 30, 45, 240, ArcType.OPEN);
-        gc.strokeArc(60, 160, 30, 30, 45, 240, ArcType.CHORD);
-        gc.strokeArc(110, 160, 30, 30, 45, 240, ArcType.ROUND);
-        gc.fillPolygon(new double[]{10, 40, 10, 40},
-                new double[]{210, 210, 240, 240}, 4);
-        gc.strokePolygon(new double[]{60, 90, 60, 90},
-                new double[]{210, 210, 240, 240}, 4);
-        gc.strokePolyline(new double[]{110, 140, 110, 140},
-                new double[]{210, 210, 240, 240}, 4);
     }
 
     /**
@@ -381,7 +506,8 @@ public class PaintController {
     /**
      * Clears canvas when CLEAR menuItem is pressed.
      */
-    public void handleClearAction(ActionEvent actionEvent) {
+    @FXML
+    public void handleClearAction() {
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION, "Are you sure you want to clear your current canvas?", ButtonType.YES, ButtonType.NO);
         alert.setTitle("Clear Canvas");
         alert.showAndWait();
@@ -402,42 +528,7 @@ public class PaintController {
     public void handleRedoAction(ActionEvent actionEvent) {
         this.getCanvas().undoRedo.Redo(this.getCanvas());
     }
-    /**
-     * handles pencil button when clicked
-     * changes the color of the button clicked.
-     */
-    public void handlePencil(ActionEvent actionEvent) {
-        if (!pencil) {
-            pencil = true;
-            pencilButton.setTextFill(Color.LIGHTGREEN);
-        }
-        else {
-            pencil = false;
-            pencilButton.setTextFill(Color.BLACK);
-        }
-    }
 
-    public void handleEraser(ActionEvent actionEvent) {
-        if (!eraser) {
-            eraser = true;
-            eraserButton.setTextFill(Color.LIGHTGREEN);
-        }
-        else {
-            eraser = false;
-            eraserButton.setTextFill(Color.BLACK);
-        }
-    }
-
-    public void handleSnip(ActionEvent actionEvent) {
-        if (!snip) {
-            snip = true;
-            snipButton.setTextFill(Color.LIGHTGREEN);
-        }
-        else {
-            snip = false;
-            snipButton.setTextFill(Color.BLACK);
-        }
-    }
     public void handleCut(ActionEvent actionEvent) {
         getCanvas().sCut();
     }
@@ -451,26 +542,20 @@ public class PaintController {
     }
 
     public void handlePaste(ActionEvent actionEvent) {
-        getCanvas().sPaste();
+        if (getToggle() == tools.Snip) {
+            getCanvas().sCrop();
+        } else {
+            snipButton.setSelected(true);
+        }
     }
 
     public void handleMirror(ActionEvent actionEvent) { getCanvas().sMirror(); }
 
     public void handleRotate(ActionEvent actionEvent) { getCanvas().sRotate(); }
 
-    public void handleRect(ActionEvent actionEvent) {
-        if (!rectangle) {
-            rectangle = true;
-            rectangleButton.setTextFill(Color.LIGHTGREEN);
-        }
-        else {
-            rectangle = false;
-            rectangleButton.setTextFill(Color.BLACK);
-        }
-    }
     /**
      * Helper function that adjust value to be constrained between min/max
-     * @param val   The integer being evaluated.
+     * @param val   The double being evaluated.
      * @param min   The minimum possible value.
      * @param max   The maximum possible value.
      * @return      Value between min/max
@@ -481,52 +566,18 @@ public class PaintController {
         return val;
     }
 
-    public void handleAutoSaveButton(ActionEvent actionEvent) {
-        if (!auto) {
-            auto = true;
-            DropShadow shadow = new DropShadow();
-            autoSaveButton.setEffect(shadow);
-
-            timerLabel.setText("AutoSave: " + timeSeconds.toString());
-            timerLabel.setTextFill(Color.RED);
-
-            timeSeconds = STARTTIME;
-
-            //update timer label
-            timerLabel.setText("AutoSave: " + timeSeconds);
-            timeline = new Timeline();
-            timeline.setCycleCount(Timeline.INDEFINITE);
-            timeline.getKeyFrames().add(
-                    new KeyFrame(Duration.seconds(1), new EventHandler<ActionEvent>() {
-                        @Override
-                        public void handle(ActionEvent actionEvent) {
-                            timeSeconds--;
-                            // update timerLabel
-                            timerLabel.setText("AutoSave: " + timeSeconds);
-                            if (timeSeconds <= 0) {
-                                timeSeconds = STARTTIME;
-                                timeline.playFromStart();
-                                try {
-                                    Save();
-                                    Notifications.create().title("AutoSave").text("Saved File Successfully!").hideAfter(new Duration(3000)).owner(root.getScene().getWindow()).show();
-                                } catch (IOException e) {
-                                    throw new RuntimeException(e);
-                                }
-                            }
-                        }
-                    }));
-            timeline.playFromStart();
-        }
-        else {
-            auto = false;
-            autoSaveButton.setEffect(null);
-            timeline.stop();
-            timeSeconds = STARTTIME;
-            timerLabel.setText("AutoSave: " + timeSeconds);
-        }
+    /**
+     * Helper function that adjust value to be constrained between min/max
+     * @param val   The integer being evaluated.
+     * @param min   The minimum possible value.
+     * @param max   The maximum possible value.
+     * @return      Value between min/max
+     */
+    public static int clamp(int val, int min, int max) {
+        if (val > max) val = max;
+        else if (val < min) val = min;
+        return val;
     }
-
-
 
 }
 

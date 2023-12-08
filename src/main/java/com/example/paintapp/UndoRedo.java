@@ -6,14 +6,25 @@ import javafx.scene.image.*;
 
 import java.util.Stack;
 
+/**
+ * Handles undo and redo for changes in a Canvas
+ */
 public class UndoRedo {
 
-
-// (stack > array) because stack follows LIFO principle.
-    // contains history of undone images/canvas
+    /**
+     * Stack of actions possible to undo
+     */
     private final Stack<Image> undoHistory = new Stack<>();
+    /**
+     * Stack of actions possible to redo
+     */
     private final Stack<Image> redoHistory = new Stack<>();
 
+    /**
+     * Called when needing to track a change in the canvas and pushes it onto undoHistory stack
+     *
+     * @param panel Canvas panel currently in
+     */
     public void trackHistory(CanvasPanel panel) {
         Image undoneImage = getCanvasImage(panel.canvas);
         undoHistory.push(undoneImage);
@@ -21,13 +32,16 @@ public class UndoRedo {
         redoHistory.clear();
     }
 
+    /**
+     * Changes canvas to previous canvas
+     *
+     * @param panel current canvas
+     */
     public void Undo(CanvasPanel panel) {
-        // Saves image for future redo/redoHistory
         Image undoneImage = getCanvasImage(panel.canvas);
         redoHistory.push(undoneImage);
         if (redoHistory.size() >= 20) redoHistory.remove(0);
 
-        // changes curr canvas --> prev canvas
         panel.canvas.getGraphicsContext2D().setEffect(null);
         panel.canvas.getGraphicsContext2D().clearRect(0,0, panel.canvas.getWidth(), panel.canvas.getHeight());
         Image prev;
@@ -49,6 +63,11 @@ public class UndoRedo {
         panel.root.setScaleY(y);
     }
 
+    /**
+     * Function that returns to a canvas state after undo function was called
+     *
+     * @param panel current canvas
+     */
     public void Redo(CanvasPanel panel) {
         // changes curr canvas --> prev canvas
         panel.canvas.getGraphicsContext2D().setEffect(null);
@@ -68,12 +87,14 @@ public class UndoRedo {
         undoHistory.push(prev);
     }
 
-
-    // set to static so it will be used by all instances of the class
-    // Function returns canvas as an IMAGE type
+    /**
+     * Function that prepares and returns the current canvas to be saved for undo
+     *
+     * @param canvas canvas currently in
+     * @return Unscaled javafx image of the canvas
+     */
     public static Image getCanvasImage(Canvas canvas) {
         SnapshotParameters parameters = new SnapshotParameters();
-        // (getscale > getsize) scale allows me to resize/compress my image.
         double y = canvas.getScaleY();
         double x = canvas.getScaleX();
         canvas.setScaleX(1);

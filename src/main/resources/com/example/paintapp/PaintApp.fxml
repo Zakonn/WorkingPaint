@@ -3,70 +3,159 @@
 <?import javafx.geometry.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<?import javafx.scene.paint.Color?>
+<?import org.controlsfx.control.ToggleSwitch?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.image.Image?>
 
-<?import java.lang.Integer?>
 <AnchorPane fx:id="root" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="1080.0" prefWidth="1920.0" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.paintapp.PaintController">
         <BorderPane prefHeight="1080.0" prefWidth="1920.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
             <top>
                 <VBox prefHeight="120.0" prefWidth="1920.0" BorderPane.alignment="CENTER">
-                        <MenuBar fx:id="menuBar">
-                                <Menu mnemonicParsing="false" text="File">
-                                    <items>
-                                        <MenuItem onAction="#handleNewAction" text="New" />
-                                        <MenuItem onAction="#handleOpenAction" text="Open" />
-                                        <MenuItem onAction="#handleSaveAction" text="Save" />
-                                        <MenuItem onAction="#handleSaveAsAction" text="SaveAs" />
-                                    </items>
-                                </Menu>
-                                <Menu mnemonicParsing="false" text="Edit">
-                                    <items>
-                                        <MenuItem onAction="#handleClearAction" text="Clear Tab" />
-                                        <MenuItem onAction="#handleUndoAction" text="Undo" />
-                                        <MenuItem onAction="#handleRedoAction" text="Redo" />
-                                    </items>
-                                </Menu>
-                                <Menu mnemonicParsing="false" text="Help">
-                                    <items>
-                                        <MenuItem text="Search" />
-                                        <MenuItem onAction="#handleAboutAction" text="About" />
-                                    </items>
-                                </Menu>
+                        <MenuBar>
+                            <Menu mnemonicParsing="false" text="File">
+                                <MenuItem onAction="#handleNewAction" text="New"/>
+                                <MenuItem onAction="#handleOpenAction" text="Open"/>
+                                <MenuItem onAction="#handleSaveAction" text="Save"/>
+                                <MenuItem onAction="#handleSaveAsAction" text="SaveAs"/>
+                                <MenuItem onAction="#handleButtonClose" text="Close"/>
+                            </Menu>
+                            <Menu mnemonicParsing="false" text="Edit">
+                                <MenuItem onAction="#handleClearAction" text="Clear Tab"/>
+                                <MenuItem onAction="#handleUndoAction" text="Undo"/>
+                                <MenuItem onAction="#handleRedoAction" text="Redo"/>
+                            </Menu>
+                            <Menu mnemonicParsing="false" text="Help">
+                                <MenuItem text="Search"/>
+                                <MenuItem onAction="#handleAboutAction" text="About"/>
+                            </Menu>
                         </MenuBar>
-                        <ToolBar fx:id="toolBar" prefHeight="100.0" prefWidth="1920.0" VBox.vgrow="NEVER">
+                        <ToolBar prefHeight="100.0" prefWidth="1920.0" VBox.vgrow="NEVER">
                             <VBox.margin>
                                 <Insets />
                             </VBox.margin>
                             <ColorPicker fx:id="colorPicker" onAction="#updateColor"> </ColorPicker>
-                            <Button fx:id="pencilButton" onAction="#handlePencil" text="Pencil"> </Button>
-                            <Button fx:id="eraserButton" onAction="#handleEraser" text="Eraser"> </Button>
-                            <Button fx:id="rectangleButton" onAction="#handleRect" text="Rectangle"> </Button>
-                            <Button fx:id="snipButton" onAction="#handleSnip" text="Snip"> </Button>
-                            <Button fx:id="cutButton" onAction="#handleCut" text="Cut"> </Button>
-                            <Button fx:id="copyButton" onAction="#handleCopy" text="Copy"> </Button>
-                            <Button fx:id="pasteButton" onAction="#handlePaste" text="Paste"> </Button>
-                            <Button fx:id="cropButton" onAction="#handleCrop" text="Crop"> </Button>
-                            <Button fx:id="mirrorButton" onAction="#handleMirror" text="Mirror"> </Button>
-                            <Button fx:id="rotateButton" onAction="#handleRotate" text="Rotate"> </Button>
+                            <ToggleButton fx:id="pointerButton" >
+                                <graphic>
+                                    <ImageView fitHeight="20" fitWidth="20">
+                                        <Image url="@tool_icons/pointer.png" > </Image>
+                                    </ImageView>
+                                </graphic>
+                            </ToggleButton>
+                            <ToggleButton fx:id="pencilButton" >
+                                <graphic>
+                                    <ImageView fitHeight="20" fitWidth="20">
+                                        <Image url="@tool_icons/pencil.png" > </Image>
+                                    </ImageView>
+                                </graphic>
+                            </ToggleButton>
+                            <ToggleButton fx:id="eraserButton" >
+                                <graphic>
+                                    <ImageView fitHeight="20" fitWidth="20">
+                                        <Image url="@tool_icons/eraser.png" > </Image>
+                                    </ImageView>
+                                </graphic>
+                            </ToggleButton>
+                            <ToggleButton fx:id="lineButton" >
+                                <graphic>
+                                    <ImageView fitHeight="20" fitWidth="20">
+                                        <Image url="@tool_icons/line.png" > </Image>
+                                    </ImageView>
+                                </graphic>
+                            </ToggleButton>
+                            <ToggleButton fx:id="rectangleButton" >
+                                <graphic>
+                                    <ImageView fitHeight="20" fitWidth="20">
+                                        <Image url="@tool_icons/rectangle.png" > </Image>
+                                    </ImageView>
+                                </graphic>
+                            </ToggleButton>
+
+                            <ToggleButton fx:id="snipButton">
+                                <graphic>
+                                    <ImageView fitHeight="20" fitWidth="20">
+                                        <Image url="@tool_icons/snip.png" > </Image>
+                                    </ImageView>
+                                </graphic>
+                            </ToggleButton>
+                            <ToggleButton fx:id="squareButton" >
+                                <graphic>
+                                    <ImageView fitHeight="20" fitWidth="20">
+                                        <Image url="@tool_icons/square.png" > </Image>
+                                    </ImageView>
+                                </graphic>
+                            </ToggleButton>
+                            <ToggleButton fx:id="ovalButton" >
+                                <graphic>
+                                    <ImageView fitHeight="20" fitWidth="20">
+                                        <Image url="@tool_icons/oval.png" > </Image>
+                                    </ImageView>
+                                </graphic>
+                            </ToggleButton>
+                            <ToggleButton fx:id="polyButton" >
+                                <graphic>
+                                    <ImageView fitHeight="20" fitWidth="20">
+                                        <Image url="@tool_icons/poly.png" > </Image>
+                                    </ImageView>
+                                </graphic>
+                            </ToggleButton>
+                            <Label text="Polygon Sides:"> </Label>
+                            <ComboBox fx:id="polySides" editable="true" maxWidth="100" value="6"> </ComboBox>
+                            <Button fx:id="cutButton" onAction="#handleCut" >
+                                <graphic>
+                                    <ImageView fitHeight="20" fitWidth="20">
+                                        <Image url="@tool_icons/cut.png" > </Image>
+                                    </ImageView>
+                                </graphic>
+                            </Button>
+                            <Button fx:id="copyButton" onAction="#handleCopy">
+                                <graphic>
+                                    <ImageView fitHeight="20" fitWidth="20">
+                                        <Image url="@tool_icons/copy.jpg" > </Image>
+                                    </ImageView>
+                                </graphic>
+                            </Button>
+                            <Button fx:id="pasteButton" onAction="#handlePaste">
+                                <graphic>
+                                    <ImageView fitHeight="20" fitWidth="20">
+                                        <Image url="@tool_icons/paste.png" > </Image>
+                                    </ImageView>
+                                </graphic>
+                            </Button>
+                            <Button fx:id="cropButton" onAction="#handleCrop">
+                                <graphic>
+                                    <ImageView fitHeight="20" fitWidth="20">
+                                        <Image url="@tool_icons/crop.png" > </Image>
+                                    </ImageView>
+                                </graphic>
+                            </Button>
+                            <Button fx:id="mirrorButton" onAction="#handleMirror">
+                                <graphic>
+                                    <ImageView fitHeight="20" fitWidth="20">
+                                        <Image url="@tool_icons/mirror.png" > </Image>
+                                    </ImageView>
+                                </graphic>
+                            </Button>
+                            <Button fx:id="rotateButton" onAction="#handleRotate">
+                                <graphic>
+                                    <ImageView fitHeight="20" fitWidth="20">
+                                        <Image url="@tool_icons/rotate.png" > </Image>
+                                    </ImageView>
+                                </graphic>
+                            </Button>
                             <Label text="Line Width"> </Label>
-                            <ComboBox fx:id="lineWidth" editable="true" onAction="#updateLineWidth" maxWidth="100" value="1">
-                            </ComboBox>
-                            <Button onAction="#handleShapes" text="Shapes!!"> </Button>
+                            <ComboBox fx:id="lineWidth" editable="true" onAction="#updateLineWidth" maxWidth="100" value="10"> </ComboBox>
                             <Label text="Canvas Width"> </Label>
-                            <ComboBox fx:id="cWidth" editable="true" onAction="#handlecWidth" maxWidth="100" >
-                            </ComboBox>
+                            <ComboBox fx:id="cWidth" editable="true" onAction="#handlecWidth" maxWidth="100" > </ComboBox>
                             <Label text="Canvas Height"> </Label>
-                            <ComboBox fx:id="cHeight" editable="true" onAction="#handlecHeight" maxWidth="100">
-                            </ComboBox>
-                            <Separator orientation="VERTICAL"> </Separator>
-                            <Label fx:id="timerLabel" > </Label>
-                            <Button fx:id="autoSaveButton" onAction="#handleAutoSaveButton"  text="ON/OFF"> </Button>
+                            <ComboBox fx:id="cHeight" editable="true" onAction="#handlecHeight" maxWidth="100"> </ComboBox>
+                            <Label fx:id="timerLabel"> </Label>
+                            <ToggleSwitch fx:id="autoSaveSwitch" text="AutoSave"> </ToggleSwitch>
 
                         </ToolBar>
                 </VBox>
             </top>
             <center>
-                <AnchorPane fx:id="centerRoot" BorderPane.alignment="CENTER">
+                <AnchorPane BorderPane.alignment="CENTER">
                         <TabPane fx:id="tabs" prefHeight="200.0" prefWidth="200.0" tabClosingPolicy="UNAVAILABLE" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
                     </AnchorPane>
             </center>

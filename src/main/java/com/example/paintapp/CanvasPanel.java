@@ -13,6 +13,7 @@ import javafx.scene.control.ScrollPane;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 import javafx.scene.image.Image;
+import javafx.scene.image.PixelReader;
 import javafx.scene.image.WritableImage;
 import javafx.scene.input.Clipboard;
 import javafx.scene.input.ClipboardContent;
@@ -28,18 +29,20 @@ import java.awt.image.BufferedImage;
 
 /**
  * Class that handles creation and configuration of all canvas nodes
- *
- * @author rmur
  */
-
-
 public class CanvasPanel {
     /**
      *Panel name
      */
     public final String Name;
-    // Instance of controller class
+    public final SnapshotParameters parameters = new SnapshotParameters();
+    /**
+     * Instance of the controller class
+     */
     private final PaintController controller;
+    /**
+     * The parent Pane of this Canvas
+     */
     private final TabPane parent;
     private final Double CWIDTH = 1024d;
     private final Double CHEIGHT = 1024d;
@@ -110,26 +113,23 @@ public class CanvasPanel {
 
         AnchorPane canvasPane = new AnchorPane(canvas);
         AnchorPane sCPane = new AnchorPane(ghostCanvas);
-
         AnchorPane.setLeftAnchor(canvas, 0.0);
         AnchorPane.setRightAnchor(canvas, 0.0);
         AnchorPane.setTopAnchor(canvas, 0.0);
         AnchorPane.setBottomAnchor(canvas, 0.0);
-
         AnchorPane.setLeftAnchor(ghostCanvas, 0.0);
         AnchorPane.setRightAnchor(ghostCanvas, 0.0);
         AnchorPane.setTopAnchor(ghostCanvas, 0.0);
         AnchorPane.setBottomAnchor(ghostCanvas, 0.0);
-
-        root.setPrefWidth(CWIDTH);
-        root.setPrefHeight(CHEIGHT);
-        root.getChildren().add(canvasPane);
-        root.getChildren().add(sCPane);
         AnchorPane.setLeftAnchor(root, 0.0);
         AnchorPane.setRightAnchor(root, 0.0);
         AnchorPane.setTopAnchor(root, 0.0);
         AnchorPane.setBottomAnchor(root, 0.0);
 
+        root.setPrefWidth(CWIDTH);
+        root.setPrefHeight(CHEIGHT);
+        root.getChildren().add(canvasPane);
+        root.getChildren().add(sCPane);
         pane.getChildren().add(root);
         pane.setPrefHeight(CHEIGHT);
         pane.setPrefWidth(CWIDTH);
@@ -159,7 +159,7 @@ public class CanvasPanel {
         pane.setOnMouseEntered(this::mouseEnter);
         pane.setOnMouseExited(this::mouseExit);
 
-
+        parameters.setFill(Color.TRANSPARENT);
         undoRedo = new UndoRedo();
         gc = canvas.getGraphicsContext2D();
         gc.clearRect(0, 0, canvas.getWidth(), canvas.getHeight());
@@ -181,23 +181,18 @@ public class CanvasPanel {
     private void onMousePressed(MouseEvent event) {
         firstTouch = new Point2D(event.getX(), event.getY());
         if (event.getButton() == MouseButton.PRIMARY) {
-            if (controller.pencil) {
-                undoRedo.trackHistory(this);
-                gc.beginPath();
-                gc.moveTo(event.getX(), event.getY());
-                gc.stroke();
-            } else if (controller.snip) {
-                double width = controller.currentLineWidth;
-                ghostGC.setStroke(controller.currentColor);
-                ghostGC.setLineWidth(width);
-                ghostGC.setLineWidth(2);
-                ghostGC.setLineDashes(width / 2, width / 2, width / 2, width / 2);
-                ghostGC.setLineDashOffset(10);
-                ghostGC.setEffect(null);
-                ghostGC.setStroke(Color.LIGHTBLUE);
-
-            } else if (controller.rectangle) {
-                undoRedo.trackHistory(this);
+            switch (controller.getToggle()) {
+                case Pencil, Eraser -> {
+                    undoRedo.trackHistory(this);
+                    gc.beginPath();
+                    gc.moveTo(event.getX(), event.getY());
+                    gc.stroke();
+                    PaintController.loggingTool.info("[{}] Using {} tool", this.Name, controller.getToggle().toString());
+                }
+                case Line, Rectangle, Square, Oval, Polygon -> {
+                    undoRedo.trackHistory(this);
+                    PaintController.loggingTool.info("[{}] Using {} tool", this.Name, controller.getToggle().toString());
+                }
             }
         }
     }
@@ -208,20 +203,47 @@ public class CanvasPanel {
      */
     private void onMouseReleased(MouseEvent event) {
         if (event.getButton() == MouseButton.PRIMARY) {
-            if (controller.snip) {
-                ghostGC.clearRect(0, 0, ghostCanvas.getWidth(), ghostCanvas.getHeight());
-                DrawShapes.DrawRectanlge(firstTouch.getX(), firstTouch.getY(), event.getX(), event.getY(), ghostGC);
-                s = getSubImage(firstTouch.getX(), firstTouch.getY(), event.getX(), event.getY(), this.canvas);
-                if (insideCanvas) {
-                    s1 = firstTouch.getX();
-                    s2 = firstTouch.getY();
-                    s3 = event.getX();
-                    s4 = event.getY();
+            switch (controller.getToggle()) {
+                case Line -> {
+                    gc.strokeLine(firstTouch.getX(), firstTouch.getY(), event.getX(), event.getY());
+                    ghostGC.clearRect(0, 0, ghostCanvas.getWidth(), ghostCanvas.getHeight());
                 }
-            }
-            if (controller.rectangle) {
-                DrawShapes.DrawRectanlge(firstTouch.getX(), firstTouch.getY(), event.getX(), event.getY(), gc);
-                ghostGC.clearRect(0,0, ghostCanvas.getWidth(), ghostCanvas.getHeight());
+                case Rectangle -> {
+                    DrawShapes.DrawRectangle(firstTouch.getX(), firstTouch.getY(), event.getX(), event.getY(), gc);
+                    ghostGC.clearRect(0, 0, ghostCanvas.getWidth(), ghostCanvas.getHeight());
+                }
+                case Square -> {
+                    DrawShapes.DrawSquare(firstTouch.getX(), firstTouch.getY(), event.getX(), event.getY(), gc);
+                    ghostGC.clearRect(0, 0, ghostCanvas.getWidth(), ghostCanvas.getHeight());
+                }
+                case Oval -> {
+                    DrawShapes.DrawOval(firstTouch.getX(), firstTouch.getY(), event.getX(), event.getY(), gc);
+                    ghostGC.clearRect(0, 0, ghostCanvas.getWidth(), ghostCanvas.getHeight());
+                }
+                case Polygon -> {
+                    int sides = 6;
+                    try {
+                        sides = PaintController.clamp(Integer.parseInt(controller.polySides.getEditor().getText()), 3, 1000);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                    DrawShapes.DrawPoly(firstTouch.getX(), firstTouch.getY(), event.getX(), event.getY(), sides, gc);
+                    ghostGC.clearRect(0, 0, ghostCanvas.getWidth(), ghostCanvas.getHeight());
+                }
+                case Snip -> {
+                    ghostGC.clearRect(0, 0, ghostCanvas.getWidth(), ghostCanvas.getHeight());
+                    DrawShapes.DrawRectangle(firstTouch.getX(), firstTouch.getY(), event.getX(), event.getY(), ghostGC);
+                    s = getSubImage(firstTouch.getX(), firstTouch.getY(), event.getX(), event.getY(), this.canvas);
+                    if (insideCanvas) {
+                        s1 = firstTouch.getX();
+                        s2 = firstTouch.getY();
+                        s3 = event.getX();
+                        s4 = event.getY();
+                    }
+                }
+
+                default -> {
+                }
             }
         }
     }
@@ -231,24 +253,57 @@ public class CanvasPanel {
      * @param event
      */
     private void onMouseDragged(MouseEvent event) {
-            if (controller.pencil) {
-                gc.setStroke(controller.currentColor);
-                gc.setLineWidth(controller.currentLineWidth);
-                gc.lineTo(event.getX(), event.getY());
-                gc.stroke();
+        if (event.getButton() == MouseButton.PRIMARY) {
+
+            //System.out.println(controller.getToolType());
+            switch (controller.getToggle()) {
+                case Pointer -> {
+
+                }
+                case Pencil -> {
+                    gc.lineTo(event.getX(), event.getY());
+                    gc.stroke();
+                }
+                case Eraser -> {
+                    double size = Double.parseDouble(controller.lineWidth.getEditor().getText()) * 2;
+                    gc.clearRect(event.getX() - size / 2, event.getY() - size / 2, size, size);
+                }
+                case Line -> {
+                    ghostGC.clearRect(0, 0, ghostCanvas.getWidth(), ghostCanvas.getHeight());
+                    ghostGC.strokeLine(firstTouch.getX(), firstTouch.getY(), event.getX(), event.getY());
+                }
+                case Rectangle -> {
+                    ghostGC.clearRect(0, 0, ghostCanvas.getWidth(), ghostCanvas.getHeight());
+                    DrawShapes.DrawRectangle(firstTouch.getX(), firstTouch.getY(), event.getX(), event.getY(), ghostGC);
+                }
+                case Square -> {
+                    ghostGC.clearRect(0, 0, ghostCanvas.getWidth(), ghostCanvas.getHeight());
+                    DrawShapes.DrawSquare(firstTouch.getX(), firstTouch.getY(), event.getX(), event.getY(), ghostGC);
+                }
+
+                case Oval -> {
+                    ghostGC.clearRect(0, 0, ghostCanvas.getWidth(), ghostCanvas.getHeight());
+                    DrawShapes.DrawOval(firstTouch.getX(), firstTouch.getY(), event.getX(), event.getY(), ghostGC);
+                }
+                case Polygon -> {
+                    int sides = 6;
+                    try {
+                        sides = controller.clamp(Integer.parseInt(controller.polySides.getEditor().getText()), 3, 1000);
+                    } catch (Exception e) {
+                        PaintController.loggingTool.error("[{}] PolySides Input was invalid!", this.Name);
+                        e.printStackTrace();
+                    }
+                    ghostGC.clearRect(0, 0, ghostCanvas.getWidth(), ghostCanvas.getHeight());
+                    DrawShapes.DrawPoly(firstTouch.getX(), firstTouch.getY(), event.getX(), event.getY(), sides, ghostGC);
+                }
+                case Snip -> {
+                    ghostGC.clearRect(0, 0, ghostCanvas.getWidth(), ghostCanvas.getHeight());
+                    DrawShapes.DrawRectangle(firstTouch.getX(), firstTouch.getY(), event.getX(), event.getY(), ghostGC);
+                }
+                default -> {
+                }
             }
-            else if(controller.snip) {
-                ghostGC.clearRect(0, 0, ghostCanvas.getWidth(), ghostCanvas.getHeight());
-                DrawShapes.DrawRectanlge(firstTouch.getX(), firstTouch.getY(), event.getX(), event.getY(), ghostGC);
-            } else if (controller.eraser) {
-                double size = (controller.currentLineWidth)*2;
-                System.out.println(size);
-                gc.clearRect(event.getX() - size / 2, event.getY() - size / 2, size, size);
-            }
-            else if (controller.rectangle) {
-                ghostGC.clearRect(0,0, ghostCanvas.getWidth(), ghostCanvas.getHeight());
-                DrawShapes.DrawRectanlge(firstTouch.getX(), firstTouch.getY(), event.getX(), event.getY(), ghostGC);
-            }
+        }
     }
 
     /**
@@ -283,7 +338,7 @@ public class CanvasPanel {
     }
 
     /**
-     * @return      name of canvas
+     * @return name of canvas
      */
 
     public String getName() {
@@ -291,10 +346,10 @@ public class CanvasPanel {
     }
 
     /**
-     * handles copy function after something is snipped(selected)
+     * handles copy function after something is snipped
      */
     public void sCopy() {
-        if (controller.copy) {
+        if (controller.getToggle() == tools.Snip) {
             ghostGC.clearRect(0, 0, ghostCanvas.getWidth(), ghostCanvas.getHeight());
             Clipboard clipboard = Clipboard.getSystemClipboard();
             ClipboardContent content = new ClipboardContent();
@@ -304,46 +359,50 @@ public class CanvasPanel {
     }
 
     /**
-     * handles cut function after something is snipped(selected)
+     * handles cut function after something is snipped
      */
     public void sCut() {
-        ghostGC.clearRect(0, 0, ghostCanvas.getWidth(), ghostCanvas.getHeight());
-        undoRedo.trackHistory(this);
-        double x1 = s1;
-        double y1 = s2;
-        double x2 = s3;
-        double y2 = s4;
-        double w = Math.abs(x2 - x1);
-        double h = Math.abs(y2 - y1);
-        {
-            if (x2 >= x1 && y2 >= y1) {
-                gc.clearRect(x1, y1, w, h);
-            } else if (x2 >= x1) {
-                gc.clearRect(x1, y2, w, h);
-            } else gc.clearRect(x2, Math.min(y2, y1), w, h);
-        }
-        Clipboard clipboard = Clipboard.getSystemClipboard();
-        ClipboardContent content = new ClipboardContent();
-        content.putImage(s);
-        clipboard.setContent(content);
-    }
-    /**
-     * handles paste function after something is snipped(selected)
-     */
-    public void sPaste() {
-        if (s != null) {
+        if (controller.getToggle() == tools.Snip) {
             ghostGC.clearRect(0, 0, ghostCanvas.getWidth(), ghostCanvas.getHeight());
             undoRedo.trackHistory(this);
-            Point2D point = new Point2D(mouseFollow.getX() - (s.getWidth() / 2), mouseFollow.getY() - (s.getHeight() / 2));
-            if (insideCanvas) this.canvas.getGraphicsContext2D().drawImage(s, point.getX(),point.getY());
-            else this.canvas.getGraphicsContext2D().drawImage(s, point.getX(), point.getY());
+            double x1 = s1;
+            double y1 = s2;
+            double x2 = s3;
+            double y2 = s4;
+            double w = Math.abs(x2 - x1);
+            double h = Math.abs(y2 - y1);
+            {
+                if (x2 >= x1 && y2 >= y1) {
+                    gc.clearRect(x1, y1, w, h);
+                } else if (x2 >= x1) {
+                    gc.clearRect(x1, y2, w, h);
+                } else gc.clearRect(x2, Math.min(y2, y1), w, h);
+            }
+            Clipboard clipboard = Clipboard.getSystemClipboard();
+            ClipboardContent content = new ClipboardContent();
+            content.putImage(s);
+            clipboard.setContent(content);
         }
     }
     /**
-     * handles crop function after something is snipped(selected)
+     * handles paste function after something is snipped
+     */
+    public void sPaste() {
+        if (controller.getToggle() == tools.Snip) {
+            if (s != null) {
+                ghostGC.clearRect(0, 0, ghostCanvas.getWidth(), ghostCanvas.getHeight());
+                undoRedo.trackHistory(this);
+                Point2D point = new Point2D(mouseFollow.getX() - (s.getWidth() / 2), mouseFollow.getY() - (s.getHeight() / 2));
+                if (insideCanvas) this.canvas.getGraphicsContext2D().drawImage(s, point.getX(), point.getY());
+                else this.canvas.getGraphicsContext2D().drawImage(s, point.getX(), point.getY());
+            }
+        }
+    }
+    /**
+     * handles crop function after something is snipped
      */
     public void sCrop() {
-        if (controller.crop) {
+        if (controller.getToggle() == tools.Snip) {
             if (s != null) {
                 undoRedo.trackHistory(this);
                 gc.clearRect(0, 0, canvas.getWidth(), canvas.getHeight());
@@ -355,89 +414,99 @@ public class CanvasPanel {
                 this.UpdateSize();
                 this.canvas.getGraphicsContext2D().drawImage(s, 0, 0);
                 s = null;
-
             }
         }
     }
+
+    /**
+     * handles mirror function after something is snipped
+     */
     public void sMirror() {
-        if (s!=null) {
-            undoRedo.trackHistory(this);
-            BufferedImage img = SwingFXUtils.fromFXImage(s,null);
-            AffineTransform tx = new AffineTransform();
-            AffineTransform tx2 = new AffineTransform();
+        if (controller.getToggle() == tools.Snip) {
+            if (s != null) {
+                undoRedo.trackHistory(this);
+                BufferedImage img = SwingFXUtils.fromFXImage(s, null);
+                AffineTransform tx = new AffineTransform();
+                AffineTransform tx2 = new AffineTransform();
 
-            tx = AffineTransform.getScaleInstance(-1,1);
-            tx2 = AffineTransform.getScaleInstance(1,-1);
+                tx = AffineTransform.getScaleInstance(-1, 1);
+                tx2 = AffineTransform.getScaleInstance(1, -1);
 
-            tx.translate(-img.getWidth(null),0);
-            tx2.translate(0,-img.getHeight(null));
+                tx.translate(-img.getWidth(null), 0);
+                tx2.translate(0, -img.getHeight(null));
 
 
-            AffineTransformOp op = new AffineTransformOp(tx, AffineTransformOp.TYPE_NEAREST_NEIGHBOR);
-            AffineTransformOp op2 = new AffineTransformOp(tx2, AffineTransformOp.TYPE_NEAREST_NEIGHBOR);
-            img = op.filter(img,null);
-            img = op2.filter(img,null);
+                AffineTransformOp op = new AffineTransformOp(tx, AffineTransformOp.TYPE_NEAREST_NEIGHBOR);
+                AffineTransformOp op2 = new AffineTransformOp(tx2, AffineTransformOp.TYPE_NEAREST_NEIGHBOR);
+                img = op.filter(img, null);
+                img = op2.filter(img, null);
 
-            ghostGC.clearRect(0,0, ghostCanvas.getWidth(), ghostCanvas.getHeight());
+                ghostGC.clearRect(0, 0, ghostCanvas.getWidth(), ghostCanvas.getHeight());
 
-            double x1 = s1;
-            double y1 = s2;
-            double x2 = s3;
-            double y2 = s4;
-            double w = Math.abs(x2-x1);
-            double h = Math.abs(y2-y1);
-            {
-                if (x2 >= x1 && y2 >= y1) {
-                    gc.clearRect(x1, y1, w, h);
-                } else if (x2 >= x1) {
-                    gc.clearRect(x1, y2, w, h);
-                } else gc.clearRect(x2, Math.min(y2, y1), w, h);
+                double x1 = s1;
+                double y1 = s2;
+                double x2 = s3;
+                double y2 = s4;
+                double w = Math.abs(x2 - x1);
+                double h = Math.abs(y2 - y1);
+                {
+                    if (x2 >= x1 && y2 >= y1) {
+                        gc.clearRect(x1, y1, w, h);
+                    } else if (x2 >= x1) {
+                        gc.clearRect(x1, y2, w, h);
+                    } else gc.clearRect(x2, Math.min(y2, y1), w, h);
+                }
+                Point2D point = DrawShapes.getCorner(s1, s2, s3, s4);
+                this.canvas.getGraphicsContext2D().drawImage(SwingFXUtils.toFXImage(img, null),
+                        point.getX(), point.getY());
             }
-            Point2D point = DrawShapes.getCorner(s1,s2,s3,s4);
-            this.canvas.getGraphicsContext2D().drawImage(SwingFXUtils.toFXImage(img,null),
-                    point.getX(), point.getY());
         }
     }
+
+    /**
+     * handles rotate function after something is snipped
+     */
     public void sRotate() {
-        if (s!=null) {
-            undoRedo.trackHistory(this);
-            BufferedImage img = SwingFXUtils.fromFXImage(s,null);
-            AffineTransformOp op;
+        if (controller.getToggle() == tools.Snip) {
+            if (s != null) {
+                undoRedo.trackHistory(this);
+                BufferedImage img = SwingFXUtils.fromFXImage(s, null);
+                AffineTransformOp op;
 
-            AffineTransform transform = new AffineTransform();
-            transform.rotate(Math.PI / 2, img.getWidth() / 2d, img.getHeight() / 2d);
-            double offset = (img.getWidth() - img.getHeight()) / 2d;
-            transform.translate(offset, offset);
+                AffineTransform transform = new AffineTransform();
+                transform.rotate(Math.PI / 2, img.getWidth() / 2d, img.getHeight() / 2d);
+                double offset = (img.getWidth() - img.getHeight()) / 2d;
+                transform.translate(offset, offset);
 
-            op = new AffineTransformOp(transform, AffineTransformOp.TYPE_BILINEAR);
+                op = new AffineTransformOp(transform, AffineTransformOp.TYPE_BILINEAR);
 
-            img = op.filter(img,null);
+                img = op.filter(img, null);
 
-            ghostGC.clearRect(0,0, ghostCanvas.getWidth(), ghostCanvas.getHeight());
-            double x1 = s1;
-            double y1 = s2;
-            double x2 = s3;
-            double y2 = s4;
-            double w = Math.abs(x2-x1);
-            double h = Math.abs(y2-y1);
-            {
-                if (x2 >= x1 && y2 >= y1) {
-                    gc.clearRect(x1, y1, w, h);
-                } else
-                if (x2 >= x1) {
-                    gc.clearRect(x1, y2, w, h);
-                } else gc.clearRect(x2, Math.min(y2, y1), w, h);
+                ghostGC.clearRect(0, 0, ghostCanvas.getWidth(), ghostCanvas.getHeight());
+                double x1 = s1;
+                double y1 = s2;
+                double x2 = s3;
+                double y2 = s4;
+                double w = Math.abs(x2 - x1);
+                double h = Math.abs(y2 - y1);
+                {
+                    if (x2 >= x1 && y2 >= y1) {
+                        gc.clearRect(x1, y1, w, h);
+                    } else if (x2 >= x1) {
+                        gc.clearRect(x1, y2, w, h);
+                    } else gc.clearRect(x2, Math.min(y2, y1), w, h);
+                }
+                Point2D point = DrawShapes.getCorner(s1, s2, s3, s4);
+                double x = img.getWidth();
+                double y = img.getHeight();
+                if (x > this.canvas.getWidth()) this.setSizeX(x);
+                if (y > this.canvas.getHeight()) this.setSizeY(y);
+                this.UpdateSize();
+                this.canvas.getGraphicsContext2D().drawImage(SwingFXUtils.toFXImage(img, null),
+                        PaintController.clamp(point.getX() - x / 2, 0, this.canvas.getWidth()),
+                        PaintController.clamp(point.getY() - y / 2, 0, this.canvas.getHeight()));
+                s = SwingFXUtils.toFXImage(img, null);
             }
-            Point2D point = DrawShapes.getCorner(s1,s2,s3,s4);
-            double x = img.getWidth();
-            double y = img.getHeight();
-            if (x > this.canvas.getWidth()) this.setSizeX(x);
-            if (y > this.canvas.getHeight()) this.setSizeY(y);
-            this.UpdateSize();
-            this.canvas.getGraphicsContext2D().drawImage(SwingFXUtils.toFXImage(img, null),
-                    PaintController.clamp(point.getX() - x / 2, 0, this.canvas.getWidth()),
-                    PaintController.clamp(point.getY() - y / 2, 0, this.canvas.getHeight()));
-            s = SwingFXUtils.toFXImage(img,null);
         }
     }
     /**
