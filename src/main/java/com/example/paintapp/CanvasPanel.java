@@ -181,6 +181,7 @@ public class CanvasPanel {
     private void onMousePressed(MouseEvent event) {
         firstTouch = new Point2D(event.getX(), event.getY());
         if (event.getButton() == MouseButton.PRIMARY) {
+            gc.setLineWidth(controller.currentLineWidth);
             gc.setStroke(controller.currentColor);
             ghostGC.setStroke(Color.LIGHTBLUE);
             switch (controller.getToggle()) {
@@ -206,6 +207,7 @@ public class CanvasPanel {
      */
     private void onMouseReleased(MouseEvent event) {
         if (event.getButton() == MouseButton.PRIMARY) {
+            gc.setLineWidth(controller.currentLineWidth);
             gc.setStroke(controller.currentColor);
             ghostGC.setStroke(Color.LIGHTBLUE);
             switch (controller.getToggle()) {
@@ -259,6 +261,7 @@ public class CanvasPanel {
      */
     private void onMouseDragged(MouseEvent event) {
         if (event.getButton() == MouseButton.PRIMARY) {
+            gc.setLineWidth(controller.currentLineWidth);
             gc.setStroke(controller.currentColor);
             ghostGC.setStroke(Color.LIGHTBLUE);
             switch (controller.getToggle()) {
